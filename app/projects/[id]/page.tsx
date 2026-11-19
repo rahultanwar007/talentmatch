@@ -5,6 +5,7 @@ import { getProjectRankings } from "@/lib/actions/matching";
 import { MatchScoreBadge } from "@/components/match/match-score-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Building2,
   Calendar,
@@ -183,14 +184,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     #{index + 1}
                   </span>
 
-                  <img
-                    src={
-                      emp.avatarUrl ||
-                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-                    }
-                    alt={emp.name}
-                    className="h-12 w-12 rounded-full border border-slate-200 object-cover"
-                  />
+                  <Avatar size="md">
+                    <AvatarImage
+                      src={emp.avatarUrl || ""}
+                      alt={emp.name}
+                    />
+                    <AvatarFallback>
+                      {emp.name.slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">

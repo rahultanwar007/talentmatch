@@ -15,6 +15,7 @@ import { EmployerWithDetails } from "@/lib/actions/employers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   BarChart3,
   TrendingUp,
@@ -101,36 +102,20 @@ export function MarketIntelligenceDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Navigation Tabs */}
-      <div className="flex rounded-xl border border-slate-200/80 bg-slate-100/70 p-1.5 gap-2">
-        <button
-          onClick={() => setActiveTab("market")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-            activeTab === "market"
-              ? "bg-white text-indigo-700 shadow-2xs border border-slate-200/60 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold"
-          }`}
-        >
-          <BarChart3 className="h-4 w-4" />
-          <span>Market Skill Supply vs Demand ({initialReport.skillStats.length} Technologies)</span>
-        </button>
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as "market" | "extractor")}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="market" className="py-2.5">
+            <BarChart3 className="h-4 w-4" />
+            <span>Market Skill Supply vs Demand ({initialReport.skillStats.length} Technologies)</span>
+          </TabsTrigger>
+          <TabsTrigger value="extractor" className="py-2.5">
+            <Sparkles className="h-4 w-4" />
+            <span>Smart Job Description & Resume Skill Extractor</span>
+          </TabsTrigger>
+        </TabsList>
 
-        <button
-          onClick={() => setActiveTab("extractor")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-            activeTab === "extractor"
-              ? "bg-white text-indigo-700 shadow-2xs border border-slate-200/60 font-semibold"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold"
-          }`}
-        >
-          <Sparkles className="h-4 w-4" />
-          <span>Smart Job Description & Resume Skill Extractor</span>
-        </button>
-      </div>
-
-      {/* Tab 1: Market Supply vs Demand */}
-      {activeTab === "market" && (
-        <div className="space-y-6">
+        {/* Tab 1: Market Supply vs Demand */}
+        <TabsContent value="market" className="space-y-6">
           {/* Executive Macro KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
@@ -437,12 +422,10 @@ export function MarketIntelligenceDashboard({
               </table>
             </div>
           </div>
-        </div>
-      )}
+        </TabsContent>
 
-      {/* Tab 2: Smart Job Description & Resume Skill Extractor */}
-      {activeTab === "extractor" && (
-        <div className="space-y-6">
+        {/* Tab 2: Smart Job Description & Resume Skill Extractor */}
+        <TabsContent value="extractor" className="space-y-6">
           <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -576,8 +559,8 @@ export function MarketIntelligenceDashboard({
               </div>
             )}
           </div>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { MatchScoreBadge } from "@/components/match/match-score-badge";
 import { CandidateLearningDashboard } from "./candidate-learning-dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Briefcase,
   GraduationCap,
@@ -45,58 +46,34 @@ export function EmployerDetailView({
 
   return (
     <div className="space-y-6">
-      {/* Navigation Tabs Bar */}
-      <div className="flex rounded-xl border border-slate-200/80 bg-slate-100/70 p-1.5 gap-2">
-        <button
-          onClick={() => setActiveTab("projects")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-            activeTab === "projects"
-              ? "bg-white text-indigo-700 shadow-2xs border border-slate-200/60"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <Briefcase className="h-4 w-4" />
-          <span>Ranked Project Compatibility ({rankings.length})</span>
-        </button>
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as "projects" | "learning" | "pipeline")}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="projects" className="py-2.5">
+            <Briefcase className="h-4 w-4" />
+            <span>Ranked Project Compatibility ({rankings.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="learning" className="py-2.5">
+            <GraduationCap className="h-4 w-4" />
+            <span>My Learning Journey ({enrollments.length})</span>
+            {enrollments.some((e) => e.status === "Completed") && (
+              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700">
+                +{enrollments.filter((e) => e.status === "Completed").length} Levels
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="pipeline" className="py-2.5">
+            <UserCheck className="h-4 w-4" />
+            <span>Staffing Pipeline ({placements.length})</span>
+            {placedCount > 0 && (
+              <span className="rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700">
+                {placedCount} Placed
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-        <button
-          onClick={() => setActiveTab("learning")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-            activeTab === "learning"
-              ? "bg-white text-indigo-700 shadow-2xs border border-slate-200/60"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <GraduationCap className="h-4 w-4" />
-          <span>My Learning Journey ({enrollments.length} Enrolled)</span>
-          {enrollments.some((e) => e.status === "Completed") && (
-            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700">
-              +{enrollments.filter((e) => e.status === "Completed").length} Levels
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab("pipeline")}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all ${
-            activeTab === "pipeline"
-              ? "bg-white text-indigo-700 shadow-2xs border border-slate-200/60"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-          }`}
-        >
-          <UserCheck className="h-4 w-4" />
-          <span>Staffing Pipeline ({placements.length})</span>
-          {placedCount > 0 && (
-            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700">
-              {placedCount} Placed
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Tab 1: Ranked Project Compatibility */}
-      {activeTab === "projects" && (
-        <div className="space-y-4">
+        {/* Tab 1: Ranked Project Compatibility */}
+        <TabsContent value="projects" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -188,23 +165,21 @@ export function EmployerDetailView({
               );
             })}
           </div>
-        </div>
-      )}
+        </TabsContent>
 
-      {/* Tab 2: Candidate Learning Journey */}
-      {activeTab === "learning" && (
-        <CandidateLearningDashboard
-          employerId={employer.id}
-          employerName={employer.name}
-          initialEnrollments={enrollments}
-          availableCourses={allCourses}
-          missingSkillTags={missingSkillTags}
-        />
-      )}
+        {/* Tab 2: Candidate Learning Journey */}
+        <TabsContent value="learning">
+          <CandidateLearningDashboard
+            employerId={employer.id}
+            employerName={employer.name}
+            initialEnrollments={enrollments}
+            availableCourses={allCourses}
+            missingSkillTags={missingSkillTags}
+          />
+        </TabsContent>
 
-      {/* Tab 3: Staffing Pipeline & Placements */}
-      {activeTab === "pipeline" && (
-        <div className="space-y-4">
+        {/* Tab 3: Staffing Pipeline & Placements */}
+        <TabsContent value="pipeline" className="space-y-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <UserCheck className="h-5 w-5 text-indigo-600" />
@@ -302,8 +277,8 @@ export function EmployerDetailView({
               })}
             </div>
           )}
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

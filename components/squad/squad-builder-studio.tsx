@@ -8,6 +8,8 @@ import { CourseItem } from "@/lib/actions/courses";
 import { calculateSquadAnalysis } from "@/lib/engine/squad";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip } from "@/components/ui/tooltip";
 import {
   Users,
   Briefcase,
@@ -24,6 +26,8 @@ import {
   TrendingUp,
   Building2,
   GraduationCap,
+  Zap,
+  RotateCcw,
 } from "lucide-react";
 
 interface SquadBuilderStudioProps {
@@ -43,9 +47,8 @@ export function SquadBuilderStudio({
     initialProjectId || projects[0]?.id || ""
   );
 
-  // Multi-selected candidate IDs
+  // Multi-selected candidate IDs (default first 2 candidates)
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(() => {
-    // Default pick first 2 candidates
     return employers.slice(0, 2).map((e) => e.id);
   });
 
@@ -79,10 +82,27 @@ export function SquadBuilderStudio({
     setSelectedMemberIds((prev) => prev.filter((mId) => mId !== id));
   };
 
+  // Presets
+  const handleApplyPreset = (count: number) => {
+    if (!selectedProject || employers.length === 0) return;
+    // Rank candidates by their individual match to the project
+    const ranked = [...employers].sort((a, b) => {
+      const aMatches = a.skills.filter((s) =>
+        selectedProject.skills.some((ps) => ps.skillName.toLowerCase() === s.skillName.toLowerCase())
+      ).length;
+      const bMatches = b.skills.filter((s) =>
+        selectedProject.skills.some((ps) => ps.skillName.toLowerCase() === s.skillName.toLowerCase())
+      ).length;
+      return bMatches - aMatches;
+    });
+    setSelectedMemberIds(ranked.slice(0, count).map((e) => e.id));
+  };
+
   if (projects.length === 0 || employers.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-600 shadow-sm">
-        <p className="text-lg">No projects or talent profiles available.</p>
+      <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-600 shadow-sm">
+        <p className="text-lg font-bold text-slate-800">No projects or talent profiles available.</p>
+        <p className="text-xs text-slate-500 mt-1">Please seed the database to assemble squads.</p>
       </div>
     );
   }
@@ -93,18 +113,71 @@ export function SquadBuilderStudio({
 
   return (
     <div className="space-y-8">
+      {/* Non-Technical Explainer Banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/40 p-6 sm:p-7 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+              <Layers className="h-3.5 w-3.5 text-indigo-600" />
+              Complementary Team Assembler
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              Build a High-Performance Engineering Squad
+            </h2>
+            <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+              When one engineer cannot fulfill every skill requirement alone, the Squad Builder combines complementary specialists so that <strong>100% of the project's technical needs are covered</strong> seamlessly.
+            </p>
+          </div>
+
+          {/* Quick Presets */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 sm:pt-0">
+            <span className="text-[11px] font-bold uppercase text-slate-400 block sm:inline">
+              1-Click Presets:
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleApplyPreset(2)}
+              className="text-xs bg-white hover:bg-slate-50 border-slate-300"
+            >
+              <Zap className="h-3 w-3 mr-1 text-indigo-600" />
+              Fast Duo (2)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleApplyPreset(3)}
+              className="text-xs bg-white hover:bg-slate-50 border-slate-300"
+            >
+              <Sparkles className="h-3 w-3 mr-1 text-purple-600" />
+              Balanced Trio (3)
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedMemberIds([])}
+              className="text-xs text-slate-500 hover:text-slate-800"
+              title="Clear all squad members"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reset
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Target Project Selector Header */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1 space-y-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wider text-indigo-600 flex items-center gap-1.5">
-              <Briefcase className="h-4 w-4" />
-              Target Project Requisition
+            <label className="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+              <Briefcase className="h-4 w-4 text-indigo-600" />
+              Select Target Project Requisition
             </label>
             <select
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-2xs focus:border-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-600"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-2xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             >
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -118,10 +191,10 @@ export function SquadBuilderStudio({
             <div className="flex flex-wrap items-center gap-3 pt-4 sm:pt-0">
               <div className="text-xs text-slate-500">
                 <span className="block text-[11px] text-slate-400 uppercase font-medium">
-                  Required Skills:
+                  Required Competencies:
                 </span>
                 <span className="font-semibold text-slate-800">
-                  {selectedProject.skills.length} technical competencies
+                  {selectedProject.skills.length} skills ({selectedProject.skills.filter(s => s.isRequired).length} must-have)
                 </span>
               </div>
               <Badge variant="outline" className="text-xs">
@@ -137,10 +210,10 @@ export function SquadBuilderStudio({
           {/* Left Column: Team Squad Summary & Member Deck (5 cols) */}
           <div className="space-y-6 lg:col-span-5">
             {/* Squad Cumulative Coverage Card */}
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Cumulative Squad Fit
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Total Team Skill Coverage
                 </span>
                 <Badge
                   variant={
@@ -150,9 +223,9 @@ export function SquadBuilderStudio({
                       ? "warning"
                       : "destructive"
                   }
-                  className="text-xs font-medium"
+                  className="text-xs font-bold"
                 >
-                  {isFullCoverage ? "100% Full Team Coverage" : "Partial Coverage"}
+                  {isFullCoverage ? "🟢 100% Full Team Coverage" : `🟡 ${squadAnalysis.squadCoverageScore}% Partial Coverage`}
                 </Badge>
               </div>
 
@@ -166,14 +239,14 @@ export function SquadBuilderStudio({
 
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-xs text-slate-600">
-                  <span>Mandatory Requirements Covered:</span>
+                  <span>Must-Have Requirements Fulfilled:</span>
                   <strong className="font-mono text-emerald-700 font-bold">
                     {squadAnalysis.satisfiedRequiredCount} of{" "}
                     {squadAnalysis.totalRequiredCount}
                   </strong>
                 </div>
 
-                <div className="h-2.5 w-full rounded-full bg-slate-100 border border-slate-200/60 overflow-hidden">
+                <div className="h-3 w-full rounded-full bg-slate-100 border border-slate-200/60 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-500 ${
                       isFullCoverage
@@ -193,7 +266,7 @@ export function SquadBuilderStudio({
               <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <span className="text-[11px] text-slate-400 block font-medium">
-                    Team Depth / Redundancy:
+                    Team Depth / Backup:
                   </span>
                   <strong className="text-slate-800 font-mono flex items-center gap-1 mt-0.5">
                     <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
@@ -214,7 +287,7 @@ export function SquadBuilderStudio({
             </div>
 
             {/* Assembled Squad Roster */}
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Users className="h-4 w-4 text-purple-600" />
@@ -227,24 +300,25 @@ export function SquadBuilderStudio({
 
               {squadMembers.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-6 text-center text-xs text-slate-500">
-                  No members added to the squad yet. Pick candidates below!
+                  No members added to the squad yet. Click candidates below or select a 1-click preset!
                 </div>
               ) : (
                 <div className="space-y-2.5">
                   {squadMembers.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 hover:border-slate-300 transition-colors"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 hover:border-slate-300 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={
-                            member.avatarUrl ||
-                            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-                          }
-                          alt={member.name}
-                          className="h-9 w-9 rounded-full border border-slate-200 object-cover"
-                        />
+                        <Avatar size="sm">
+                          <AvatarImage
+                            src={member.avatarUrl || ""}
+                            alt={member.name}
+                          />
+                          <AvatarFallback>
+                            {member.name.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <h5 className="font-semibold text-slate-900 text-xs">
                             {member.name}
@@ -261,7 +335,7 @@ export function SquadBuilderStudio({
                         </Badge>
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Remove from squad"
                         >
                           <X className="h-4 w-4" />
@@ -275,16 +349,16 @@ export function SquadBuilderStudio({
 
             {/* Candidate Pool Add Row */}
             {availableCandidates.length > 0 && selectedMemberIds.length < 6 && (
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-5">
-                <h5 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2.5">
-                  Add Candidates from Talent Pool:
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm">
+                <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
+                  Add Candidates from Bench:
                 </h5>
                 <div className="flex flex-wrap gap-2">
                   {availableCandidates.map((cand) => (
                     <button
                       key={cand.id}
                       onClick={() => handleAddMember(cand.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 shadow-2xs hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all cursor-pointer"
                     >
                       <Plus className="h-3 w-3 text-indigo-600" />
                       <span>{cand.name}</span>
@@ -300,7 +374,7 @@ export function SquadBuilderStudio({
 
           {/* Right Column: Squad Competency Matrix Table (7 cols) */}
           <div className="space-y-6 lg:col-span-7">
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
@@ -342,77 +416,48 @@ export function SquadBuilderStudio({
                             {item.skillName}
                           </span>
                           {item.isRequired && (
-                            <span className="text-rose-600 ml-1 font-bold">
+                            <span className="text-rose-600 ml-1 font-bold" title="Must-Have Skill">
                               *
                             </span>
                           )}
                         </td>
-
-                        <td className="py-3 px-2 text-slate-600 font-mono">
+                        <td className="py-3 px-2 font-mono text-slate-600">
                           L{item.requiredProficiency}
                         </td>
-
-                        <td className="py-3 px-2 font-mono">
-                          <span
-                            className={
-                              item.status === "covered"
-                                ? "text-emerald-700 font-bold"
-                                : item.status === "under_proficient"
-                                ? "text-amber-700 font-bold"
-                                : "text-rose-600 font-bold"
-                            }
-                          >
-                            L{item.squadMaxProficiency}
-                          </span>
+                        <td className="py-3 px-2 font-mono font-bold text-slate-900">
+                          L{item.squadMaxProficiency}
                         </td>
-
                         <td className="py-3 px-3">
                           {item.primaryOwner ? (
-                            <span className="font-medium text-slate-800">
-                              {item.primaryOwner.employerName}{" "}
-                              <span className="text-[10px] text-indigo-600 font-semibold">
-                                (L{item.primaryOwner.proficiencyLevel})
-                              </span>
+                            <span className="font-medium text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md px-1.5 py-0.5">
+                              {item.primaryOwner.employerName}
                             </span>
                           ) : (
                             <span className="text-slate-400 italic">None</span>
                           )}
                         </td>
-
                         <td className="py-3 px-2">
-                          {item.backupContributors.length > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-600">
-                              <ShieldCheck className="h-3 w-3 text-indigo-600" />
-                              +{item.backupContributors.length} backup
-                            </span>
-                          ) : item.primaryOwner ? (
-                            <span className="text-[10px] text-amber-700 font-medium">
-                              Single Point
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-rose-600 font-medium">
-                              No Depth
-                            </span>
-                          )}
+                          <span className="font-mono text-slate-600">
+                            {(item.primaryOwner ? 1 : 0) + item.backupContributors.length} member{((item.primaryOwner ? 1 : 0) + item.backupContributors.length) !== 1 ? "s" : ""}
+                          </span>
                         </td>
-
                         <td className="py-3 px-3 text-right">
-                          <Badge
-                            variant={
-                              item.status === "covered"
-                                ? "success"
-                                : item.status === "under_proficient"
-                                ? "warning"
-                                : "destructive"
-                            }
-                            className="text-[10px]"
-                          >
-                            {item.status === "covered"
-                              ? "Covered"
-                              : item.status === "under_proficient"
-                              ? "Partial"
-                              : "Missing"}
-                          </Badge>
+                          {item.status === "covered" ? (
+                            <Badge variant="success" className="text-[10px]">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Covered
+                            </Badge>
+                          ) : item.status === "under_proficient" ? (
+                            <Badge variant="warning" className="text-[10px]">
+                              <AlertTriangle className="h-3 w-3 mr-1" />
+                              Needs +L{item.requiredProficiency - item.squadMaxProficiency}
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="text-[10px]">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Missing
+                            </Badge>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -420,61 +465,6 @@ export function SquadBuilderStudio({
                 </table>
               </div>
             </div>
-
-            {/* Residual Squad Gaps & Upskilling Suggestions */}
-            {squadAnalysis.recommendedCourses.length > 0 && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="h-5 w-5 text-rose-600" />
-                  <div>
-                    <h4 className="text-sm font-bold text-rose-900">
-                      Remaining Squad Skill Deficits ({squadAnalysis.recommendedCourses.length})
-                    </h4>
-                    <p className="text-xs text-slate-600">
-                      Even with all selected members, the squad still lacks these requirements. Assign these courses to bridge the remaining gaps.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {squadAnalysis.recommendedCourses.map((c) => (
-                    <div
-                      key={c.id}
-                      className="rounded-xl border border-slate-200 bg-white p-3.5 text-xs shadow-2xs flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <Badge variant="default" className="text-[10px] font-mono">
-                            {c.skillTag}
-                          </Badge>
-                          <span className="text-[10px] text-slate-400">
-                            {c.provider}
-                          </span>
-                        </div>
-                        <h5 className="font-semibold text-slate-900 line-clamp-1">
-                          {c.title}
-                        </h5>
-                        <p className="text-[10px] text-rose-600 mt-1 line-clamp-1">
-                          {c.reason}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-slate-100 flex justify-end">
-                        <a
-                          href={c.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[11px] text-indigo-600 hover:underline inline-flex items-center gap-1 font-semibold"
-                        >
-                          <span>View Course</span>
-                          <ArrowRight className="h-2.5 w-2.5" />
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

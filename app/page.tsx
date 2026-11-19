@@ -6,6 +6,8 @@ import { getEmployers } from "@/lib/actions/employers";
 import { MatchScoreBadge } from "@/components/match/match-score-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip } from "@/components/ui/tooltip";
 import {
   Briefcase,
   Users,
@@ -19,6 +21,8 @@ import {
   ShieldCheck,
   Layers,
   BarChart3,
+  HelpCircle,
+  Zap,
 } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -28,49 +32,124 @@ export default async function DashboardPage() {
     getEmployers(),
   ]);
 
+  const topPair = stats.topPairings[0];
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/40 p-8 sm:p-12 shadow-sm">
+      <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/50 p-8 sm:p-12 shadow-sm">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-indigo-200/30 blur-3xl pointer-events-none" />
         <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-purple-200/30 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50/80 px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-2xs">
             <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-            AI-Driven Skill Gap, Squad Building & Placement Engine
+            AI-Powered Talent Matching & Squad Assembly
           </div>
 
           <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl leading-tight">
-            Match Top Engineering Talent with Enterprise Projects
+            Effortlessly Match Top Talent with Enterprise Projects
           </h1>
 
           <p className="mt-3 text-base text-slate-600 leading-relaxed">
-            Evaluate multidimensional fit across technical skills, proficiency levels, and experience. Pinpoint critical gaps, simulate upskilling ROI, build complementary squads, and manage your ATS staffing pipeline.
+            Welcome to <strong>TalentMatch Pro</strong>. Designed for recruiters, hiring managers, and team leads to quickly discover candidate fit, close missing skill gaps through simulated courses, and build high-performance engineering squads.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link href="/match">
-              <Button variant="gradient" size="lg">
+              <Button variant="gradient" size="lg" className="shadow-md shadow-indigo-600/20">
                 <Sparkles className="h-4 w-4 mr-1.5" />
-                Launch Match Studio
+                Analyze Candidate Fit
               </Button>
             </Link>
 
             <Link href="/squad">
               <Button variant="secondary" size="lg">
                 <Layers className="h-4 w-4 mr-1.5 text-indigo-600" />
-                Squad Builder
+                Assemble a Squad
               </Button>
             </Link>
 
-            <Link href="/analytics">
+            <Link href="/projects">
               <Button variant="outline" size="lg">
-                <BarChart3 className="h-4 w-4 mr-1.5 text-slate-600" />
-                Market Analytics
+                <Briefcase className="h-4 w-4 mr-1.5 text-slate-600" />
+                View Open Projects
               </Button>
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* 3-Step Guided Workflow for Non-Technical Users */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+              ?
+            </span>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700">
+              How It Works — Simple 3-Step Guide
+            </h2>
+          </div>
+          <span className="text-xs text-slate-500 hidden sm:inline">
+            Zero technical background needed
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Step 1 */}
+          <Link
+            href="/projects"
+            className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs hover:border-indigo-200 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 font-bold text-xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                1
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm">
+                Pick a Project
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Explore open company positions (like FinTech core or Cloud APIs) with clear requirements and budget info.
+            </p>
+          </Link>
+
+          {/* Step 2 */}
+          <Link
+            href="/match"
+            className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs hover:border-indigo-200 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600 font-bold text-xs group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                2
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm">
+                AI Evaluates Fit
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Instantly see a 0-100% readiness score with plain-English verdicts: Ready to Deploy, Bridge Training, or Gaps.
+            </p>
+          </Link>
+
+          {/* Step 3 */}
+          <Link
+            href="/match"
+            className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs hover:border-indigo-200 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-bold text-xs group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                3
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm">
+                Close Gaps & Place
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Click <em>"Simulate Closing Gaps"</em> to watch fit scores jump with courses, then add the candidate to the hiring pipeline.
+            </p>
+          </Link>
         </div>
       </div>
 
@@ -90,15 +169,18 @@ export default async function DashboardPage() {
             <span className="text-3xl font-extrabold text-slate-900">
               {stats.totalProjects}
             </span>
-            <span className="text-xs text-slate-500">company requisitions</span>
+            <span className="text-xs text-slate-500">company positions</span>
           </div>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Open requisitions ready for staffing
+          </p>
         </div>
 
         {/* Employer / Talent Profiles */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs hover:shadow-sm transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Talent Profiles
+              Talent on Bench
             </span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple-200 bg-purple-50 text-purple-600">
               <Users className="h-4 w-4" />
@@ -110,6 +192,9 @@ export default async function DashboardPage() {
             </span>
             <span className="text-xs text-slate-500">verified engineers</span>
           </div>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Available across Fullstack, Cloud & AI
+          </p>
         </div>
 
         {/* Curated Courses */}
@@ -126,15 +211,18 @@ export default async function DashboardPage() {
             <span className="text-3xl font-extrabold text-slate-900">
               {stats.totalCourses}
             </span>
-            <span className="text-xs text-slate-500">curated modules</span>
+            <span className="text-xs text-slate-500">training modules</span>
           </div>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Targeted skill bridge curricula
+          </p>
         </div>
 
         {/* Average Match Score */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs hover:shadow-sm transition-shadow">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Average Match Fit
+              Bench Readiness
             </span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
               <TrendingUp className="h-4 w-4" />
@@ -144,10 +232,53 @@ export default async function DashboardPage() {
             <span className="text-3xl font-extrabold text-emerald-600">
               {stats.averageMatchRate}%
             </span>
-            <span className="text-xs text-slate-500">across all pairings</span>
+            <span className="text-xs text-slate-500">average match</span>
           </div>
+          <p className="mt-1 text-[11px] text-slate-400">
+            High average compatibility
+          </p>
         </div>
       </div>
+
+      {/* Top Instant Match Spotlight (If available) */}
+      {topPair && (
+        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50/50 via-white to-teal-50/40 p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-100/70 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                <Zap className="h-3.5 w-3.5 text-emerald-600" />
+                Featured AI Recommendation
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">
+                Highest Candidate Fit Right Now
+              </h3>
+              <p className="text-xs text-slate-600">
+                <strong>{topPair.employer.name}</strong> ({topPair.employer.roleTitle}) has an outstanding <strong>{topPair.score}% compatibility</strong> for <strong>{topPair.project.title}</strong> at {topPair.project.companyName}.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 rounded-xl bg-white border border-emerald-200 px-3.5 py-2 shadow-2xs">
+                <span className="text-2xl font-black text-emerald-600">
+                  {topPair.score}%
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500 uppercase">
+                  Fit Score
+                </span>
+              </div>
+
+              <Link
+                href={`/match?project=${topPair.project.id}&employer=${topPair.employer.id}`}
+              >
+                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                  Inspect Fit Details
+                  <ArrowRight className="h-4 w-4 ml-1.5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* In-Demand Skills Ribbon */}
       <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
@@ -205,172 +336,61 @@ export default async function DashboardPage() {
                   #{index + 1}
                 </span>
 
-                <img
-                  src={
-                    pair.employer.avatarUrl ||
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-                  }
-                  alt={pair.employer.name}
-                  className="h-11 w-11 rounded-full border border-slate-200 object-cover shadow-2xs"
-                />
+                <Avatar size="md">
+                  <AvatarImage
+                    src={pair.employer.avatarUrl || ""}
+                    alt={pair.employer.name}
+                  />
+                  <AvatarFallback>
+                    {pair.employer.name.slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
 
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-slate-900">
                       {pair.employer.name}
                     </span>
-                    <span className="text-xs font-semibold text-indigo-600">
+                    <span className="text-xs text-slate-500">
                       ({pair.employer.roleTitle})
                     </span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {pair.employer.yearsOfExperience} yrs exp
+                    </Badge>
                   </div>
-
-                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-                    <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Project:</span>
-                    <span className="font-semibold text-slate-800">
-                      {pair.project.title}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate-600">
+                    <span className="font-medium text-indigo-600">
+                      {pair.project.companyName}
                     </span>
-                    <span className="text-slate-400">•</span>
-                    <span>{pair.project.companyName}</span>
+                    <span>•</span>
+                    <span>{pair.project.title}</span>
+                    <span>•</span>
+                    <span className="text-slate-400">
+                      Min {pair.project.minExperienceYears} yrs
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Right: Score & Match Studio CTA */}
-              <div className="flex items-center gap-4 justify-between md:justify-end">
+              {/* Right: Score badge & Action */}
+              <div className="flex items-center gap-4 ml-11 md:ml-0">
                 <MatchScoreBadge score={pair.score} size="default" />
 
                 <Link
-                  href={`/match?projectId=${pair.project.id}&employerId=${pair.employer.id}`}
+                  href={`/match?project=${pair.project.id}&employer=${pair.employer.id}`}
                 >
-                  <Button variant="outline" size="sm" className="text-xs">
-                    View Analysis
-                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors"
+                  >
+                    View Match
+                    <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
                   </Button>
                 </Link>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Two Column Grid: Recent Projects & Employers */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Projects Preview */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 text-base">
-              <Briefcase className="h-4 w-4 text-indigo-600" />
-              Company Projects ({projectsList.length})
-            </h3>
-            <Link href="/projects">
-              <span className="text-xs font-semibold text-indigo-600 hover:underline">
-                View All
-              </span>
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {projectsList.slice(0, 3).map((p) => (
-              <Link
-                key={p.id}
-                href={`/projects/${p.id}`}
-                className="block rounded-xl border border-slate-200/90 bg-slate-50/50 p-4 transition-all hover:border-indigo-300 hover:bg-white hover:shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-700">
-                    {p.companyName}
-                  </span>
-                  <Badge variant="outline" className="text-[10px]">
-                    {p.category}
-                  </Badge>
-                </div>
-                <h4 className="mt-1 font-bold text-slate-900 text-sm">
-                  {p.title}
-                </h4>
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {p.skills.slice(0, 4).map((s) => (
-                    <span
-                      key={s.id}
-                      className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-700 font-medium"
-                    >
-                      {s.skillName} {s.isRequired ? "*" : ""}
-                    </span>
-                  ))}
-                  {p.skills.length > 4 && (
-                    <span className="text-[10px] text-slate-400 self-center">
-                      +{p.skills.length - 4} more
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Employers Preview */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-purple-600" />
-              Candidate Profiles ({employersList.length})
-            </h3>
-            <Link href="/employers">
-              <span className="text-xs font-semibold text-purple-600 hover:underline">
-                View All
-              </span>
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {employersList.slice(0, 3).map((emp) => (
-              <Link
-                key={emp.id}
-                href={`/employers/${emp.id}`}
-                className="block rounded-xl border border-slate-200/90 bg-slate-50/50 p-4 transition-all hover:border-purple-300 hover:bg-white hover:shadow-2xs"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <img
-                      src={
-                        emp.avatarUrl ||
-                        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-                      }
-                      alt={emp.name}
-                      className="h-8 w-8 rounded-full border border-slate-200 object-cover"
-                    />
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">
-                        {emp.name}
-                      </h4>
-                      <p className="text-[11px] text-slate-500 leading-none">
-                        {emp.roleTitle}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px]">
-                    {emp.yearsOfExperience} yrs exp
-                  </Badge>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {emp.skills.slice(0, 4).map((s) => (
-                    <span
-                      key={s.id}
-                      className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] text-slate-700 font-medium"
-                    >
-                      {s.skillName} (L{s.proficiencyLevel})
-                    </span>
-                  ))}
-                  {emp.skills.length > 4 && (
-                    <span className="text-[10px] text-slate-400 self-center">
-                      +{emp.skills.length - 4} more
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </div>

@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Briefcase,
   Search,
   Plus,
@@ -17,6 +25,8 @@ import {
   Sparkles,
   X,
   Layers,
+  CheckCircle2,
+  Zap,
 } from "lucide-react";
 
 interface ProjectListViewProps {
@@ -108,7 +118,6 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
 
       if (res.success) {
         setIsModalOpen(false);
-        // Refresh local view
         window.location.reload();
       }
     });
@@ -120,11 +129,11 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search projects, companies, or skills..."
+            placeholder="Search projects by role, company, or tech stack..."
             className="pl-10"
           />
         </div>
@@ -134,23 +143,23 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
           onClick={() => setIsModalOpen(true)}
           variant="gradient"
           size="default"
-          className="self-start md:self-auto"
+          className="self-start md:self-auto shadow-sm"
         >
           <Plus className="h-4 w-4 mr-1" />
           Post New Project
         </Button>
       </div>
 
-      {/* Category Pills */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4">
+      {/* Category Filter Pills */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-4">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
               selectedCategory === cat
-                ? "bg-indigo-600 text-white shadow-2xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                ? "bg-indigo-600 text-white shadow-2xs font-bold"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900"
             }`}
           >
             {cat}
@@ -162,23 +171,23 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
       {filteredProjects.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 shadow-2xs">
           <Briefcase className="mx-auto h-8 w-8 text-slate-400" />
-          <p className="mt-2 font-medium">No projects matching your search.</p>
+          <p className="mt-2 font-medium">No projects match your search criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs transition-all hover:border-indigo-300 hover:shadow-sm"
+              className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-2xs transition-all hover:border-indigo-300 hover:shadow-md"
             >
               <div>
                 {/* Header: Company & Category */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      <Building2 className="h-4 w-4" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold text-xs">
+                      {project.companyName.slice(0, 2).toUpperCase()}
                     </div>
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-bold text-slate-800">
                       {project.companyName}
                     </span>
                   </div>
@@ -200,7 +209,7 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
                 {/* Requirements Pills */}
                 <div className="mt-4 pt-3 border-t border-slate-100">
                   <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2">
-                    <span className="font-medium text-slate-500">Required Tech Stack:</span>
+                    <span className="font-semibold text-slate-500">Must-Have Skills:</span>
                     <span>{project.minExperienceYears}+ yrs exp</span>
                   </div>
 
@@ -208,9 +217,9 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
                     {project.skills.map((skill) => (
                       <span
                         key={skill.id}
-                        className={`rounded-md px-2 py-0.5 text-[10px] font-medium ${
+                        className={`rounded-lg px-2 py-0.5 text-[10px] font-medium ${
                           skill.isRequired
-                            ? "border border-indigo-200 bg-indigo-50 text-indigo-700 font-semibold"
+                            ? "border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold"
                             : "border border-slate-200 bg-slate-50 text-slate-600"
                         }`}
                       >
@@ -224,220 +233,235 @@ export function ProjectListView({ initialProjects }: ProjectListViewProps) {
 
               {/* Card Footer Actions */}
               <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
-                <span className="text-xs font-mono font-medium text-slate-500">
+                <span className="text-xs font-mono font-bold text-slate-600">
                   {project.budget || "Competitive"}
                 </span>
 
-                <Link href={`/projects/${project.id}`}>
-                  <Button variant="default" size="sm" className="text-xs">
-                    View & Match
-                    <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/match?project=${project.id}`}>
+                    <Button variant="outline" size="sm" className="text-xs text-indigo-600 hover:text-indigo-700 border-indigo-200 bg-indigo-50/50">
+                      <Zap className="h-3 w-3 mr-1 text-indigo-600" />
+                      Find Matches
+                    </Button>
+                  </Link>
+
+                  <Link href={`/projects/${project.id}`}>
+                    <Button variant="default" size="sm" className="text-xs">
+                      Details
+                      <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Post New Project Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:text-slate-700"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+      {/* Post New Project Modal via Shadcn Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5 text-indigo-600" />
-              Create New Company Project
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
+              Post New Company Project
+            </DialogTitle>
+            <DialogDescription>
               Define the role, required technical skills, and minimum proficiency levels.
-            </p>
+            </DialogDescription>
+          </DialogHeader>
 
-            <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-slate-700 font-medium block mb-1">
-                    Company Name
-                  </label>
-                  <Input
-                    value={formCompany}
-                    onChange={(e) => setFormCompany(e.target.value)}
-                    placeholder="e.g. Acme Tech"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-slate-700 font-medium block mb-1">
-                    Industry
-                  </label>
-                  <Input
-                    value={formIndustry}
-                    onChange={(e) => setFormIndustry(e.target.value)}
-                    placeholder="e.g. FinTech / HealthTech"
-                  />
-                </div>
+          <form onSubmit={handleCreateSubmit} className="space-y-4 my-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Company Name
+                </label>
+                <Input
+                  value={formCompany}
+                  onChange={(e) => setFormCompany(e.target.value)}
+                  placeholder="e.g. Apex FinTech"
+                  required
+                />
               </div>
 
               <div>
-                <label className="text-slate-700 font-medium block mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Industry
+                </label>
+                <Input
+                  value={formIndustry}
+                  onChange={(e) => setFormIndustry(e.target.value)}
+                  placeholder="e.g. Financial Services"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Project Title
                 </label>
                 <Input
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Next.js Enterprise Portal"
+                  placeholder="e.g. Cloud Banking Core"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-slate-700 font-medium block mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-600"
-                  >
-                    {categories.filter((c) => c !== "All").map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-slate-700 font-medium block mb-1">
-                    Min Experience (Years)
-                  </label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="15"
-                    value={formMinExp}
-                    onChange={(e) => setFormMinExp(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="text-slate-700 font-medium block mb-1">
-                  Project Description
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Category
                 </label>
-                <Textarea
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Describe the deliverables, scope, and technical stack..."
-                  rows={3}
-                  required
+                <select
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-600 cursor-pointer"
+                >
+                  {categories.filter(c => c !== "All").map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Project Description
+              </label>
+              <Textarea
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="High-level overview of project scope, deliverables, and team context..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Min. Experience (Years)
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="15"
+                  value={formMinExp}
+                  onChange={(e) => setFormMinExp(Number(e.target.value))}
                 />
               </div>
 
               <div>
-                <label className="text-slate-700 font-medium block mb-1">
-                  Budget / Compensation
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Monthly Budget / Salary
                 </label>
                 <Input
                   value={formBudget}
                   onChange={(e) => setFormBudget(e.target.value)}
-                  placeholder="e.g. $10,000 - $14,000 / month"
+                  placeholder="e.g. $10,000 - $14,000 / mo"
                 />
               </div>
+            </div>
 
-              {/* Skills Editor */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-800">
-                    Required Skills & Proficiency
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    {skillTags.length} skills added
-                  </span>
-                </div>
+            {/* Required Skills Picker */}
+            <div className="border-t border-slate-100 pt-3">
+              <label className="block text-xs font-semibold text-slate-700 mb-2">
+                Required Technical Skills ({skillTags.length})
+              </label>
 
-                <div className="flex flex-wrap gap-2">
-                  {skillTags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-800 shadow-2xs font-medium"
-                    >
-                      <span>
-                        {tag.skillName} (L{tag.minProficiency})
-                        {tag.isRequired ? " *" : ""}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSkillTag(idx)}
-                        className="text-slate-400 hover:text-rose-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {skillTags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs text-indigo-700 font-medium"
+                  >
+                    <span>
+                      {tag.skillName} (L{tag.minProficiency})
+                      {tag.isRequired ? " *" : ""}
                     </span>
-                  ))}
-                </div>
-
-                {/* Add Skill Row */}
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                  <Input
-                    value={newSkillName}
-                    onChange={(e) => setNewSkillName(e.target.value)}
-                    placeholder="Skill name (e.g. Docker, Python)"
-                    className="flex-1 h-8 text-xs bg-white"
-                  />
-                  <select
-                    value={newSkillProf}
-                    onChange={(e) => setNewSkillProf(Number(e.target.value))}
-                    className="h-8 rounded-lg border border-slate-300 bg-white px-2 text-xs text-slate-800"
-                  >
-                    <option value={1}>L1 (Beginner)</option>
-                    <option value={2}>L2 (Intermediate)</option>
-                    <option value={3}>L3 (Advanced)</option>
-                    <option value={4}>L4 (Expert)</option>
-                  </select>
-                  <label className="flex items-center gap-1 text-[11px] text-slate-700 font-medium">
-                    <input
-                      type="checkbox"
-                      checked={newSkillReq}
-                      onChange={(e) => setNewSkillReq(e.target.checked)}
-                      className="rounded accent-indigo-600"
-                    />
-                    Req
-                  </label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleAddSkillTag}
-                    className="h-8 text-xs"
-                  >
-                    Add
-                  </Button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSkillTag(idx)}
+                      className="text-indigo-400 hover:text-indigo-700 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  value={newSkillName}
+                  onChange={(e) => setNewSkillName(e.target.value)}
+                  placeholder="Skill (e.g. Docker, Python)"
+                  className="flex-1 min-w-[140px] text-xs h-9"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddSkillTag();
+                    }
+                  }}
+                />
+
+                <select
+                  value={newSkillProf}
+                  onChange={(e) => setNewSkillProf(Number(e.target.value))}
+                  className="h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 cursor-pointer"
+                >
+                  <option value={1}>L1 (Novice)</option>
+                  <option value={2}>L2 (Junior)</option>
+                  <option value={3}>L3 (Mid-Level)</option>
+                  <option value={4}>L4 (Senior)</option>
+                  <option value={5}>L5 (Expert)</option>
+                </select>
+
+                <label className="flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newSkillReq}
+                    onChange={(e) => setNewSkillReq(e.target.checked)}
+                    className="rounded text-indigo-600"
+                  />
+                  <span>Must-Have</span>
+                </label>
+
                 <Button
                   type="button"
-                  variant="ghost"
-                  onClick={() => setIsModalOpen(false)}
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAddSkillTag}
+                  className="text-xs h-9"
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="default" disabled={isPending}>
-                  {isPending ? "Creating..." : "Create Project"}
+                  Add Skill
                 </Button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="default"
+                size="sm"
+                disabled={isPending}
+              >
+                {isPending ? "Creating..." : "Save Project"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { getCourses } from "@/lib/actions/courses";
 import { EmployerDetailView } from "@/components/employers/employer-detail-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users,
   MapPin,
@@ -80,14 +81,15 @@ export default async function EmployerDetailPage({ params }: PageProps) {
       <div className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="flex items-start gap-5">
-            <img
-              src={
-                employer.avatarUrl ||
-                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-              }
-              alt={employer.name}
-              className="h-20 w-20 rounded-2xl border-2 border-slate-200 object-cover shadow-2xs"
-            />
+            <Avatar size="xl">
+              <AvatarImage
+                src={employer.avatarUrl || ""}
+                alt={employer.name}
+              />
+              <AvatarFallback>
+                {employer.name.slice(0, 2)}
+              </AvatarFallback>
+            </Avatar>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
