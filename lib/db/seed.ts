@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
+dotenv.config();
 
 import { db, pool } from "./index";
 import {
@@ -9,6 +10,8 @@ import {
   employers,
   employerSkills,
   courses,
+  candidateCourseProgress,
+  projectPlacements,
 } from "./schema";
 import {
   SEED_COMPANIES,
@@ -22,6 +25,8 @@ async function runSeed() {
 
   try {
     // Clear existing data in reverse dependency order
+    await db.delete(projectPlacements);
+    await db.delete(candidateCourseProgress);
     await db.delete(projectSkills);
     await db.delete(employerSkills);
     await db.delete(projects);

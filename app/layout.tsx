@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
@@ -19,6 +19,11 @@ export const metadata: Metadata = {
     "Match employer/talent profiles against company project requirements with AI skill gap analysis, multi-candidate squad builder, and automated ATS pipeline.",
 };
 
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#f8fafc",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -28,6 +33,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={{ colorScheme: "light" }}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-500/20 selection:text-indigo-900">
         <Navbar />
