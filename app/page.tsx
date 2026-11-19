@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   const topPair = stats.topPairings[0];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-10">
       {/* Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/50 p-8 sm:p-12 shadow-sm">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-indigo-200/30 blur-3xl pointer-events-none" />

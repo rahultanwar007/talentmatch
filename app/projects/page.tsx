@@ -7,7 +7,7 @@ export default async function ProjectsPage() {
   const projects = await getProjects();
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       <div>
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-2">
           <Briefcase className="h-3.5 w-3.5" />

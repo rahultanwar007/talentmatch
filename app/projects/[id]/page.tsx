@@ -37,7 +37,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const { project, rankings } = data;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-8">
       {/* Back Link */}
       <Link
         href="/projects"

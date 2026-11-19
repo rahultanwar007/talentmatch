@@ -50,7 +50,7 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* Clean App Footer */}
           <footer className="border-t border-slate-200/80 bg-white py-6 text-center text-xs text-slate-500 mt-12">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="font-semibold text-slate-600">
                 TalentMatch Pro — Intelligent Profile & Project Matcher
               </p>

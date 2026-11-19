@@ -56,7 +56,7 @@ export default async function MarketAnalyticsPage() {
   const report = computeMarketIntelligence(projectInputs, employerInputs, courseInputs);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
       <div>
         <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-2">
