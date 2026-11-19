@@ -392,8 +392,53 @@ export function SquadBuilderStudio({
                 </Badge>
               </div>
 
-              {/* Coverage Table */}
-              <div className="overflow-x-auto">
+              {/* Mobile Card View */}
+              <div className="block sm:hidden space-y-2.5">
+                {squadAnalysis.skillMatrix.map((item) => (
+                  <div
+                    key={item.skillName}
+                    className="rounded-xl border border-slate-200/90 bg-white p-3 space-y-2 shadow-2xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 text-xs">
+                          {item.skillName}
+                        </span>
+                        {item.isRequired && (
+                          <span className="text-rose-600 font-bold" title="Must-Have">
+                            *
+                          </span>
+                        )}
+                      </div>
+                      {item.status === "covered" ? (
+                        <Badge variant="success" className="text-[10px]">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Covered
+                        </Badge>
+                      ) : item.status === "under_proficient" ? (
+                        <Badge variant="warning" className="text-[10px]">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Needs +L{item.requiredProficiency - item.squadMaxProficiency}
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="text-[10px]">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Missing
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                      <span>Target: <strong className="font-mono text-slate-700">L{item.requiredProficiency}</strong></span>
+                      <span>Squad Max: <strong className="font-mono text-slate-900 font-bold">L{item.squadMaxProficiency}</strong></span>
+                      <span>Lead: <strong className="text-indigo-600">{item.primaryOwner ? item.primaryOwner.employerName : "None"}</strong></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Coverage Table */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 text-slate-500 font-semibold uppercase text-[11px] bg-slate-50/60">

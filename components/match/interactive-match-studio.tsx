@@ -692,12 +692,16 @@ export function InteractiveMatchStudio({
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="analysis">
                   <Layers className="h-3.5 w-3.5" />
-                  <span>Skill Breakdown</span>
+                  <span className="hidden sm:inline">Skill Breakdown</span>
+                  <span className="sm:hidden">Skills</span>
                 </TabsTrigger>
                 <TabsTrigger value="roadmap">
                   <GraduationCap className="h-3.5 w-3.5" />
-                  <span>
+                  <span className="hidden sm:inline">
                     Upskilling Hub ({matchResult.recommendedCourses.length})
+                  </span>
+                  <span className="sm:hidden">
+                    Courses ({matchResult.recommendedCourses.length})
                   </span>
                   {isSimulating && (
                     <span className="ml-1 rounded-full bg-sky-100 px-1.5 py-0.2 text-[10px] font-bold text-sky-800 border border-sky-200">
@@ -707,7 +711,8 @@ export function InteractiveMatchStudio({
                 </TabsTrigger>
                 <TabsTrigger value="radar">
                   <Target className="h-3.5 w-3.5" />
-                  <span>Skill Radar</span>
+                  <span className="hidden sm:inline">Skill Radar</span>
+                  <span className="sm:hidden">Radar</span>
                 </TabsTrigger>
               </TabsList>
 

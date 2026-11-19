@@ -127,6 +127,7 @@ export function ProjectPipelineBoard({
 
   // Filter / Search inside the board
   const [searchFilter, setSearchFilter] = useState("");
+  const [mobileActiveStage, setMobileActiveStage] = useState<PlacementStage>("Matched");
 
   // Notes editing state
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -255,6 +256,202 @@ export function ProjectPipelineBoard({
   const inInterviewCount = placements.filter((p) => p.stage === "Interview").length;
   const inUpskillingCount = placements.filter((p) => p.stage === "In Upskilling").length;
 
+  const renderStageColumn = (stageInfo: typeof STAGES[number], isMobile = false) => {
+    const stagePlacements = placementsByStage[stageInfo.key] || [];
+
+    return (
+      <div
+        key={stageInfo.key}
+        className={`flex flex-col rounded-2xl border ${stageInfo.headerBorder} bg-white shadow-2xs overflow-hidden ${
+          isMobile ? "min-h-0" : "min-h-[460px]"
+        }`}
+      >
+        {/* Column Header */}
+        <div className={`p-3.5 border-b ${stageInfo.headerBorder} ${stageInfo.headerBg}`}>
+          <div className="flex items-center justify-between">
+            <h4 className={`text-xs font-bold uppercase tracking-wider ${stageInfo.headerText}`}>
+              {stageInfo.label}
+            </h4>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${stageInfo.countBg}`}>
+              {stagePlacements.length}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+            {stageInfo.shortDesc}
+          </p>
+        </div>
+
+        {/* Column Cards */}
+        <div className="p-3 space-y-3 flex-1 bg-slate-50/30 overflow-y-auto max-h-[600px]">
+          {stagePlacements.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400">
+              No candidates in this stage
+            </div>
+          ) : (
+            stagePlacements.map((placement) => {
+              const emp = placement.employer;
+              const isEditingNote = editingNoteId === placement.id;
+
+              return (
+                <div
+                  key={placement.id}
+                  className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all space-y-2.5"
+                >
+                  {/* Header: Candidate Info & Avatar */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar size="sm">
+                        <AvatarImage
+                          src={emp.avatarUrl || ""}
+                          alt={emp.name}
+                        />
+                        <AvatarFallback>
+                          {emp.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <Link
+                          href={`/employers/${emp.id}`}
+                          className="text-xs font-bold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1"
+                        >
+                          {emp.name}
+                        </Link>
+                        <p className="text-[10px] text-slate-500 line-clamp-1">
+                          {placement.assignedRole || emp.roleTitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Match Score Badge */}
+                    <div className="shrink-0">
+                      <MatchScoreBadge score={placement.matchScore} size="sm" />
+                    </div>
+                  </div>
+
+                  {/* Top Skills Tags */}
+                  <div className="flex flex-wrap gap-1">
+                    {emp.skills.slice(0, 3).map((s) => (
+                      <span
+                        key={s.id}
+                        className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.2 text-[9px] font-medium text-slate-600"
+                      >
+                        {s.skillName} (L{s.proficiencyLevel})
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Notes Preview / Inline Edit */}
+                  <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-2 text-xs">
+                    {isEditingNote ? (
+                      <div className="space-y-1.5">
+                        <textarea
+                          value={noteDraft}
+                          onChange={(e) => setNoteDraft(e.target.value)}
+                          className="w-full rounded border border-slate-300 bg-white p-1.5 text-[11px] text-slate-900 focus:outline-none"
+                          rows={2}
+                          placeholder="Add recruiter feedback or notes..."
+                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingNoteId(null)}
+                            className="h-6 px-2 text-[10px]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleSaveNote(placement.id)}
+                            className="h-6 px-2 text-[10px]"
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          setEditingNoteId(placement.id);
+                          setNoteDraft(placement.notes || "");
+                        }}
+                        className="cursor-pointer group/note rounded p-0.5 hover:bg-slate-100/70 transition-colors"
+                      >
+                        {placement.notes ? (
+                          <p className="text-[10px] text-slate-600 italic line-clamp-2">
+                            &ldquo;{placement.notes}&rdquo;
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-slate-400 group-hover/note:text-slate-600 flex items-center gap-1 font-medium">
+                            <MessageSquare className="h-2.5 w-2.5" />
+                            + Click to add notes
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Footer Actions & Stage Shift */}
+                  <div className="flex items-center justify-between gap-1 pt-2 border-t border-slate-100">
+                    {/* Shift Left */}
+                    <button
+                      onClick={() => handleShiftStage(placement.id, placement.stage, -1)}
+                      disabled={stageInfo.key === "Matched" || isPending}
+                      title="Move to previous stage"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* Quick Stage Dropdown */}
+                    <select
+                      value={placement.stage}
+                      onChange={(e) =>
+                        handleStageChange(
+                          placement.id,
+                          e.target.value as PlacementStage
+                        )
+                      }
+                      disabled={isPending}
+                      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-medium text-slate-800 focus:outline-none cursor-pointer"
+                    >
+                      {STAGES.map((s) => (
+                        <option key={s.key} value={s.key}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Shift Right */}
+                    <button
+                      onClick={() => handleShiftStage(placement.id, placement.stage, 1)}
+                      disabled={stageInfo.key === "Placed" || isPending}
+                      title="Advance to next stage"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* Remove button */}
+                    <button
+                      onClick={() => handleRemove(placement.id)}
+                      disabled={isPending}
+                      title="Remove candidate from pipeline"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-auto cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Project Banner & Fast Actions */}
@@ -363,201 +560,45 @@ export function ProjectPipelineBoard({
         </p>
       </div>
 
-      {/* Kanban Board Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start">
-        {STAGES.map((stageInfo) => {
-          const stagePlacements = placementsByStage[stageInfo.key] || [];
+      {/* Mobile Kanban View: Single-stage view with smooth tab switcher */}
+      <div className="block md:hidden space-y-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {STAGES.map((s) => {
+            const count = (placementsByStage[s.key] || []).length;
+            const isActive = mobileActiveStage === s.key;
+            return (
+              <button
+                key={s.key}
+                onClick={() => setMobileActiveStage(s.key)}
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-2xs font-bold"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <span>{s.label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                    isActive ? "bg-white/25 text-white" : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-          return (
-            <div
-              key={stageInfo.key}
-              className={`flex flex-col rounded-2xl border ${stageInfo.headerBorder} bg-white shadow-2xs overflow-hidden min-h-[460px]`}
-            >
-              {/* Column Header */}
-              <div className={`p-3 border-b ${stageInfo.headerBorder} ${stageInfo.headerBg}`}>
-                <div className="flex items-center justify-between">
-                  <h4 className={`text-xs font-bold uppercase tracking-wider ${stageInfo.headerText}`}>
-                    {stageInfo.label}
-                  </h4>
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${stageInfo.countBg}`}>
-                    {stagePlacements.length}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">
-                  {stageInfo.shortDesc}
-                </p>
-              </div>
+        {(() => {
+          const activeStageInfo =
+            STAGES.find((s) => s.key === mobileActiveStage) || STAGES[0];
+          return renderStageColumn(activeStageInfo, true);
+        })()}
+      </div>
 
-              {/* Column Cards */}
-              <div className="p-2.5 space-y-2.5 flex-1 bg-slate-50/30 overflow-y-auto max-h-[600px]">
-                {stagePlacements.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center text-[11px] text-slate-400">
-                    No candidates
-                  </div>
-                ) : (
-                  stagePlacements.map((placement) => {
-                    const emp = placement.employer;
-                    const isEditingNote = editingNoteId === placement.id;
-
-                    return (
-                      <div
-                        key={placement.id}
-                        className="rounded-xl border border-slate-200/90 bg-white p-3 shadow-2xs hover:shadow-sm hover:border-slate-300 transition-all space-y-2.5"
-                      >
-                        {/* Header: Candidate Info & Avatar */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <Avatar size="sm">
-                              <AvatarImage
-                                src={emp.avatarUrl || ""}
-                                alt={emp.name}
-                              />
-                              <AvatarFallback>
-                                {emp.name.slice(0, 2)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <Link
-                                href={`/employers/${emp.id}`}
-                                className="text-xs font-bold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1"
-                              >
-                                {emp.name}
-                              </Link>
-                              <p className="text-[10px] text-slate-500 line-clamp-1">
-                                {placement.assignedRole || emp.roleTitle}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Match Score Badge */}
-                          <div className="shrink-0">
-                            <MatchScoreBadge score={placement.matchScore} size="sm" />
-                          </div>
-                        </div>
-
-                        {/* Top Skills Tags */}
-                        <div className="flex flex-wrap gap-1">
-                          {emp.skills.slice(0, 3).map((s) => (
-                            <span
-                              key={s.id}
-                              className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.2 text-[9px] font-medium text-slate-600"
-                            >
-                              {s.skillName} (L{s.proficiencyLevel})
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Notes Preview / Inline Edit */}
-                        <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-2 text-xs">
-                          {isEditingNote ? (
-                            <div className="space-y-1.5">
-                              <textarea
-                                value={noteDraft}
-                                onChange={(e) => setNoteDraft(e.target.value)}
-                                className="w-full rounded border border-slate-300 bg-white p-1 text-[11px] text-slate-900 focus:outline-none"
-                                rows={2}
-                                placeholder="Add recruiter feedback or notes..."
-                              />
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setEditingNoteId(null)}
-                                  className="h-6 px-2 text-[10px]"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => handleSaveNote(placement.id)}
-                                  className="h-6 px-2 text-[10px]"
-                                >
-                                  Save
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div
-                              onClick={() => {
-                                setEditingNoteId(placement.id);
-                                setNoteDraft(placement.notes || "");
-                              }}
-                              className="cursor-pointer group/note rounded p-0.5 hover:bg-slate-100/70 transition-colors"
-                            >
-                              {placement.notes ? (
-                                <p className="text-[10px] text-slate-600 italic line-clamp-2">
-                                  &ldquo;{placement.notes}&rdquo;
-                                </p>
-                              ) : (
-                                <p className="text-[10px] text-slate-400 group-hover/note:text-slate-600 flex items-center gap-1 font-medium">
-                                  <MessageSquare className="h-2.5 w-2.5" />
-                                  + Click to add notes
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Card Footer Actions & Stage Shift */}
-                        <div className="flex items-center justify-between gap-1 pt-2 border-t border-slate-100">
-                          {/* Shift Left */}
-                          <button
-                            onClick={() => handleShiftStage(placement.id, placement.stage, -1)}
-                            disabled={stageInfo.key === "Matched" || isPending}
-                            title="Move to previous stage"
-                            className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <ChevronLeft className="h-3 w-3" />
-                          </button>
-
-                          {/* Quick Stage Dropdown */}
-                          <select
-                            value={placement.stage}
-                            onChange={(e) =>
-                              handleStageChange(
-                                placement.id,
-                                e.target.value as PlacementStage
-                              )
-                            }
-                            disabled={isPending}
-                            className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-800 focus:outline-none cursor-pointer"
-                          >
-                            {STAGES.map((s) => (
-                              <option key={s.key} value={s.key}>
-                                {s.label}
-                              </option>
-                            ))}
-                          </select>
-
-                          {/* Shift Right */}
-                          <button
-                            onClick={() => handleShiftStage(placement.id, placement.stage, 1)}
-                            disabled={stageInfo.key === "Placed" || isPending}
-                            title="Advance to next stage"
-                            className="flex h-6 w-6 items-center justify-center rounded border border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <ChevronRight className="h-3 w-3" />
-                          </button>
-
-                          {/* Remove button */}
-                          <button
-                            onClick={() => handleRemove(placement.id)}
-                            disabled={isPending}
-                            title="Remove candidate from pipeline"
-                            className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-auto cursor-pointer"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          );
-        })}
+      {/* Desktop Kanban View: 5-column Kanban Grid */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-start">
+        {STAGES.map((stageInfo) => renderStageColumn(stageInfo, false))}
       </div>
 
       {/* Add Candidate Modal via Shadcn Dialog */}

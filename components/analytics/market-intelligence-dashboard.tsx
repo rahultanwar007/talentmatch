@@ -117,7 +117,7 @@ export function MarketIntelligenceDashboard({
         {/* Tab 1: Market Supply vs Demand */}
         <TabsContent value="market" className="space-y-6">
           {/* Executive Macro KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
                 <span>Market Health Index</span>
@@ -334,7 +334,57 @@ export function MarketIntelligenceDashboard({
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
+            {/* Mobile Card View for Skill Supply vs Demand */}
+            <div className="block sm:hidden space-y-2.5">
+              {filteredSkillStats.map((item) => (
+                <div
+                  key={item.canonicalName}
+                  className="rounded-xl border border-slate-200 bg-white p-3.5 space-y-2 shadow-2xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-xs">
+                      {item.skillName}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold border ${
+                        item.status === "critical_shortage"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : item.status === "moderate_shortage"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : item.status === "surplus"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {item.status === "critical_shortage"
+                        ? "Critical Deficit"
+                        : item.status === "moderate_shortage"
+                        ? "Moderate Deficit"
+                        : item.status === "surplus"
+                        ? "Surplus"
+                        : "Balanced"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-slate-100">
+                    <span>Demand: <strong className="font-mono text-indigo-700">{item.demandCount} projects</strong></span>
+                    <span>Supply: <strong className="font-mono text-emerald-700">{item.supplyCount} profiles</strong></span>
+                    <span className="font-mono text-[11px] font-bold">
+                      {item.netGap > 0 ? (
+                        <span className="text-rose-600">-{item.netGap}</span>
+                      ) : item.netGap < 0 ? (
+                        <span className="text-emerald-700">+{Math.abs(item.netGap)}</span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden sm:block overflow-x-auto rounded-xl border border-slate-200">
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
                   <tr>
