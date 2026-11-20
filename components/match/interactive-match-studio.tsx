@@ -6,6 +6,9 @@ import { ProjectWithDetails } from "@/lib/actions/projects";
 import { EmployerWithDetails } from "@/lib/actions/employers";
 import { CourseItem } from "@/lib/actions/courses";
 import { addCandidateToPipeline } from "@/lib/actions/pipeline";
+import { getAISemanticMatch } from "@/lib/actions/ai-matching";
+import { AIMatchAnalysis } from "@/lib/engine/ai-matcher";
+import { AISemanticBreakdown } from "./ai-semantic-breakdown";
 import {
   calculateMatchAnalysis,
   simulateUpskillingMatch,
@@ -48,6 +51,9 @@ import {
   AlertCircle,
   HelpCircle,
   Zap,
+  Loader2,
+  Bot,
+  RefreshCw,
 } from "lucide-react";
 
 interface InteractiveMatchStudioProps {
@@ -77,6 +83,12 @@ export function InteractiveMatchStudio({
   const [showWeightSliders, setShowWeightSliders] = useState(false);
   const [weights, setWeights] = useState<MatchWeights>(DEFAULT_WEIGHTS);
 
+  // Dual-Mode Matching: "standard" (deterministic math) vs "ai" (Ollama / Llama 3.1 semantic)
+  const [matchingMode, setMatchingMode] = useState<"standard" | "ai">("standard");
+  const [aiCache, setAiCache] = useState<Record<string, AIMatchAnalysis>>({});
+  const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   // Phase 1: Upskilling Simulation State
   const [simulatedCourseIds, setSimulatedCourseIds] = useState<string[]>([]);
   const [pipelineAdded, setPipelineAdded] = useState(false);
@@ -86,17 +98,61 @@ export function InteractiveMatchStudio({
   // Active view tab
   const [activeTab, setActiveTab] = useState<string>("analysis");
 
+  const currentCacheKey = `${selectedProjectId}:${selectedEmployerId}`;
+  const currentAiAnalysis = aiCache[currentCacheKey] || null;
+
+  // Trigger AI analysis for a project + candidate pair
+  const triggerAIAnalysis = async (projectId: string, employerId: string) => {
+    const key = `${projectId}:${employerId}`;
+    if (aiCache[key]) return; // already in cache
+
+    setIsLoadingAI(true);
+    setAiError(null);
+    try {
+      const res = await getAISemanticMatch(projectId, employerId, weights);
+      if (res.success && res.data) {
+        setAiCache((prev) => ({ ...prev, [key]: res.data! }));
+      } else {
+        setAiError(res.error || "Failed to reach AI matching service.");
+      }
+    } catch (err: any) {
+      setAiError(err?.message || "Unexpected error connecting to AI engine.");
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const handleSelectMatchingMode = (mode: "standard" | "ai") => {
+    setMatchingMode(mode);
+    if (mode === "ai") {
+      setActiveTab("ai_semantic");
+      if (!currentAiAnalysis && !isLoadingAI) {
+        triggerAIAnalysis(selectedProjectId, selectedEmployerId);
+      }
+    } else {
+      if (activeTab === "ai_semantic") {
+        setActiveTab("analysis");
+      }
+    }
+  };
+
   // Reset simulation when project or candidate selection changes
   const handleProjectChange = (id: string) => {
     setSelectedProjectId(id);
     setSimulatedCourseIds([]);
     setPipelineAdded(false);
+    if (matchingMode === "ai" && !aiCache[`${id}:${selectedEmployerId}`]) {
+      triggerAIAnalysis(id, selectedEmployerId);
+    }
   };
 
   const handleEmployerChange = (id: string) => {
     setSelectedEmployerId(id);
     setSimulatedCourseIds([]);
     setPipelineAdded(false);
+    if (matchingMode === "ai" && !aiCache[`${selectedProjectId}:${id}`]) {
+      triggerAIAnalysis(selectedProjectId, id);
+    }
   };
 
   // Lookup selected entities
@@ -249,9 +305,27 @@ export function InteractiveMatchStudio({
     ? simulationResult.projectedAnalysis.overallScore
     : matchResult?.overallScore || 0;
 
+  // Effective score reflecting AI mode when selected
+  const effectiveScore = matchingMode === "ai" && currentAiAnalysis
+    ? currentAiAnalysis.semanticScore
+    : currentOverallScore;
+
   // Plain-English Verdict Generator
   const plainEnglishVerdict = useMemo(() => {
     if (!matchResult) return null;
+
+    if (matchingMode === "ai" && currentAiAnalysis) {
+      const score = currentAiAnalysis.semanticScore;
+      return {
+        tier: score >= 75 ? "exceptional" : score >= 55 ? "strong" : "moderate",
+        badge: `🤖 AI Fit (${score}%)`,
+        badgeVariant: (score >= 75 ? "success" : score >= 55 ? "warning" : "destructive") as any,
+        headline: "AI Semantic Assessment (Llama 3.1)",
+        summary: currentAiAnalysis.executiveSummary,
+        actionHint: `Onboarding velocity: ${currentAiAnalysis.onboardingVelocity}. ${currentAiAnalysis.scoreDelta !== 0 ? `(${currentAiAnalysis.scoreDelta > 0 ? `+${currentAiAnalysis.scoreDelta}%` : `${currentAiAnalysis.scoreDelta}%`} vs keyword baseline)` : ""}`,
+      };
+    }
+
     const score = currentOverallScore;
     if (score >= 85) {
       return {
@@ -281,12 +355,62 @@ export function InteractiveMatchStudio({
         actionHint: "Explore Squad Builder to combine them with a complementary teammate.",
       };
     }
-  }, [matchResult, currentOverallScore, selectedEmployer, selectedProject]);
+  }, [matchResult, currentOverallScore, matchingMode, currentAiAnalysis, selectedEmployer, selectedProject]);
 
   return (
     <div className="space-y-8">
-      {/* Control Panel: Project & Employer Pickers */}
-      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm">
+      {/* Control Panel: Dual-Engine Switcher, Project & Employer Pickers */}
+      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-sm space-y-6">
+        {/* Dual-Mode Matching Switcher Header */}
+        <div className="rounded-2xl bg-gradient-to-r from-slate-50 via-indigo-50/40 to-purple-50/40 p-4 border border-slate-200/90 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                Matching Engine Architecture
+              </span>
+              <Badge variant="outline" className="text-[10px] font-semibold bg-white text-indigo-700 border-indigo-200">
+                Active: {matchingMode === "standard" ? "Deterministic Formula" : "Self-Hosted Llama 3.1"}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-600 max-w-xl">
+              {matchingMode === "standard"
+                ? "Standard Mode: Instant mathematical matching using alias dictionaries and weighted formula ratios."
+                : "AI Semantic Mode: Evaluates conceptual skill transferability, cross-framework analogies, and domain fit using your self-hosted Llama 3.1."}
+            </p>
+          </div>
+
+          <div className="inline-flex p-1 rounded-xl bg-slate-200/80 border border-slate-300/80 shadow-inner self-start md:self-center shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSelectMatchingMode("standard")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                matchingMode === "standard"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <span>⚡ Standard Match</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectMatchingMode("ai")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                matchingMode === "ai"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {isLoadingAI ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+              )}
+              <span>🤖 AI Semantic Match</span>
+            </button>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           {/* Project Selector */}
           <div className="flex-1 space-y-2">
@@ -452,7 +576,7 @@ export function InteractiveMatchStudio({
           <div className="space-y-6 lg:col-span-5">
             {/* Visual Circular Gauge with Simulation Overlay */}
             <MatchScoreGauge
-              overallScore={matchResult.overallScore}
+              overallScore={effectiveScore}
               requiredSkillsScore={
                 isSimulating
                   ? simulationResult.projectedAnalysis.requiredSkillsScore
@@ -471,11 +595,19 @@ export function InteractiveMatchStudio({
               }
               requiredTotalCount={matchResult.requiredTotalCount}
               projectedScore={
-                isSimulating
+                matchingMode === "ai" && currentAiAnalysis
+                  ? currentAiAnalysis.semanticScore
+                  : isSimulating
                   ? simulationResult.projectedAnalysis.overallScore
                   : undefined
               }
-              scoreDelta={isSimulating ? simulationResult.scoreDelta : 0}
+              scoreDelta={
+                matchingMode === "ai" && currentAiAnalysis
+                  ? currentAiAnalysis.scoreDelta
+                  : isSimulating
+                  ? simulationResult.scoreDelta
+                  : 0
+              }
               simulatedSkillsCount={simulatedCourseIds.length}
             />
 
@@ -689,7 +821,17 @@ export function InteractiveMatchStudio({
           {/* Right Column: Tabbed View (7 cols) using Shadcn Tabs */}
           <div className="space-y-6 lg:col-span-7">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className={`grid w-full ${matchingMode === "ai" ? "grid-cols-4" : "grid-cols-3"}`}>
+                {matchingMode === "ai" && (
+                  <TabsTrigger
+                    value="ai_semantic"
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white font-bold"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">AI Insights</span>
+                    <span className="sm:hidden">AI</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="analysis">
                   <Layers className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">Skill Breakdown</span>
@@ -715,6 +857,47 @@ export function InteractiveMatchStudio({
                   <span className="sm:hidden">Radar</span>
                 </TabsTrigger>
               </TabsList>
+
+              {/* Tab 0: AI Semantic Breakdown (when AI mode active) */}
+              {matchingMode === "ai" && (
+                <TabsContent value="ai_semantic" className="space-y-6">
+                  {isLoadingAI ? (
+                    <div className="rounded-2xl border border-indigo-200 bg-white p-12 text-center shadow-sm space-y-4">
+                      <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-xs animate-pulse">
+                        <Bot className="h-7 w-7" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-base font-bold text-slate-900 flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+                          Evaluating Semantic Transferability...
+                        </h4>
+                        <p className="text-xs text-slate-500 max-w-md mx-auto">
+                          Connecting to your self-hosted Llama 3.1 model to analyze conceptual skill overlap, adjacent frameworks, and domain competence.
+                        </p>
+                      </div>
+                    </div>
+                  ) : aiError ? (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50/70 p-6 text-center space-y-3">
+                      <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+                      <div>
+                        <h4 className="text-sm font-bold text-rose-900">AI Evaluation Unavailable</h4>
+                        <p className="text-xs text-rose-700 mt-1">{aiError}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => triggerAIAnalysis(selectedProjectId, selectedEmployerId)}
+                        className="text-xs bg-white text-rose-800 border-rose-300 hover:bg-rose-100"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                        Retry AI Evaluation
+                      </Button>
+                    </div>
+                  ) : currentAiAnalysis ? (
+                    <AISemanticBreakdown analysis={currentAiAnalysis} />
+                  ) : null}
+                </TabsContent>
+              )}
 
               {/* Tab 1: Detailed Skill Breakdown */}
               <TabsContent value="analysis" className="space-y-6">
